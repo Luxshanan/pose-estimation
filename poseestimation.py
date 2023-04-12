@@ -6,6 +6,7 @@ import uuid
 mp_drawing = mp.solutions.drawing_utils
 mp_pose = mp.solutions.pose
 
+
 def process_video(video_path):
     cap = cv2.VideoCapture(video_path)
 
@@ -16,7 +17,7 @@ def process_video(video_path):
 
     RESULT_VIDEO_PATH = "result_videos/"
     # result video is stored in given path
-    result = cv2.VideoWriter(RESULT_VIDEO_PATH + uuid.uuid4().hex+'result.mp4',
+    result = cv2.VideoWriter(RESULT_VIDEO_PATH + uuid.uuid4().hex + 'result.mp4',
                              cv2.VideoWriter_fourcc(*'mp4v'),
                              frame_rate, size)
     ## Setup mediapipe instance
@@ -60,14 +61,13 @@ def process_video(video_path):
             except:
                 pass
 
-
             # Render detections
             mp_drawing.draw_landmarks(image, results.pose_landmarks, mp_pose.POSE_CONNECTIONS,
                                       mp_drawing.DrawingSpec(color=(245, 117, 66), thickness=2, circle_radius=2),
                                       mp_drawing.DrawingSpec(color=(245, 66, 230), thickness=2, circle_radius=2)
                                       )
 
-            cv2.imshow('Mediapipe Feed', image)
+            #cv2.imshow('Mediapipe Feed', image)    #uncomment to view processing in real time
             result.write(image)
 
             if cv2.waitKey(10) & 0xFF == ord('q'):
@@ -76,6 +76,7 @@ def process_video(video_path):
         cap.release()
         result.release()
         cv2.destroyAllWindows()
+        return True
 
 
 def calculate_angle(a, b, c):
