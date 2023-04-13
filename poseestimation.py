@@ -15,9 +15,9 @@ def process_video(video_path):
     frame_rate = cap.get(5)
     size = (frame_width, frame_height)
 
-    RESULT_VIDEO_PATH = "result_videos/"
+    result_video_file_path = "result_videos/" + uuid.uuid4().hex + 'result.mp4'
     # result video is stored in given path
-    result = cv2.VideoWriter(RESULT_VIDEO_PATH + uuid.uuid4().hex + 'result.mp4',
+    result = cv2.VideoWriter(result_video_file_path,
                              cv2.VideoWriter_fourcc(*'mp4v'),
                              frame_rate, size)
     ## Setup mediapipe instance
@@ -76,7 +76,7 @@ def process_video(video_path):
         cap.release()
         result.release()
         cv2.destroyAllWindows()
-        return True
+        return result_video_file_path
 
 
 def calculate_angle(a, b, c):

@@ -2,9 +2,18 @@ from poseestimation import process_video
 from flask import Flask, request, jsonify, flash
 import os
 import uuid
+from firebase_admin import credentials, initialize_app, storage
 
 app = Flask(__name__)
 app.secret_key = "secretkey"
+
+# Init firebase with your credentials
+cred = credentials.Certificate("cric-d9771-firebase-adminsdk-pkadu-09ebdeeba3.json")
+initialize_app(cred,
+               {'storageBucket': 'cric-d9771.appspot.com'}
+               )
+bucket = storage.bucket() # storage bucket
+
 
 path = os.getcwd()
 UPLOAD_FOLDER = os.path.join(path, 'uploads')
@@ -27,11 +36,25 @@ def uploadfiles():
             flash('No file ')
 
         video_file = request.files['file']
-        uploaded_video_path = os.path.join(app.config['UPLOAD_FOLDER'], uuid.uuid4().hex + video_file.filename)
+        fileid = uuid.uuid4().hex
+
+        uploaded_video_path = os.path.join(app.config['UPLOAD_FOLDER'], fileid + video_file.filename)
         video_file.save(uploaded_video_path)
-        is_success = process_video(uploaded_video_path)
-        if is_success:
-            response = "Success"
+
+        #upload to firebase storage
+
+        uploaded_video_blob = bucket.blob('uploads/' + fileid + video_file.filename)
+        uploaded_video_blob.upload_from_filename(uploaded_video_path)
+        uploaded_video_blob.make_public()
+
+        result_video_file_path = process_video(uploaded_video_path)
+        if result_video_file_path:
+            # upload to firebase storage
+            result_blob = bucket.blob(result_video_file_path)
+            result_blob.upload_from_filename(result_video_file_path)
+            result_blob.make_public()
+            #return public url of result video file
+            response = result_blob.public_url
 
     return jsonify(response)
 
