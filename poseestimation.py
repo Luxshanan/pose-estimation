@@ -58,6 +58,9 @@ def process_video(video_path):
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2, cv2.LINE_AA
                             )
 
+                is_legal_delivery = "Legal" if 165 <= angle <= 180 else "No Ball"
+                put_legal_delivery_result(is_legal_delivery, image)
+
             except:
                 pass
 
@@ -91,3 +94,18 @@ def calculate_angle(a, b, c):
         angle = 360 - angle
 
     return angle
+
+
+def put_legal_delivery_result(label, img):
+
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    font_scale = 1
+    thickness = 2
+
+    (text_width, text_height), _ = cv2.getTextSize(label, font, font_scale, thickness)
+    x = 10
+    y = text_height + 10
+
+    text_color = (0, 255, 0) if label == "Legal"  else (0, 0, 255)
+    # Draw the text on the image
+    cv2.putText(img, label, (x, y), font, font_scale, text_color, thickness)

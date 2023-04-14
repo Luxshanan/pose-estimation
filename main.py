@@ -3,6 +3,7 @@ from flask import Flask, request, jsonify, flash
 import os
 import uuid
 from firebase_admin import credentials, initialize_app, storage, firestore
+from datetime import datetime
 
 app = Flask(__name__)
 app.secret_key = "secretkey"
@@ -59,7 +60,7 @@ def uploadfiles():
             # return public url of result video file
             response = result_blob.public_url
             doc_ref = store.collection('legal-delivery-results')
-            doc_ref.add({'userId': user_id, 'resultVideo': response})
+            doc_ref.add({'userId': user_id, 'resultVideo': response, 'processedDateTime': datetime.now()})
 
     return jsonify(response)
 
