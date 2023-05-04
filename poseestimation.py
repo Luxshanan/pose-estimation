@@ -7,7 +7,7 @@ mp_drawing = mp.solutions.drawing_utils
 mp_pose = mp.solutions.pose
 
 
-def process_video(video_path):
+def process_video(video_path, is_left_handed):
     cap = cv2.VideoCapture(video_path)
 
     frame_width = int(cap.get(3))
@@ -42,12 +42,7 @@ def process_video(video_path):
                 landmarks = results.pose_landmarks.landmark
 
                 # Get coordinates
-                shoulder = [landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].x,
-                            landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].y]
-                elbow = [landmarks[mp_pose.PoseLandmark.LEFT_ELBOW.value].x,
-                         landmarks[mp_pose.PoseLandmark.LEFT_ELBOW.value].y]
-                wrist = [landmarks[mp_pose.PoseLandmark.LEFT_WRIST.value].x,
-                         landmarks[mp_pose.PoseLandmark.LEFT_WRIST.value].y]
+                elbow, shoulder, wrist = get_coordinates_for_elbow_shoulder_wrist(is_left_handed, landmarks)
 
                 # Calculate angle
                 angle = calculate_angle(shoulder, elbow, wrist)
@@ -58,7 +53,7 @@ def process_video(video_path):
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2, cv2.LINE_AA
                             )
 
-                is_legal_delivery = "Legal" if 165 <= angle <= 180 else "No Ball"
+                is_legal_delivery = "Legal Ball" if 165 <= angle <= 180 else "No Ball"
                 put_legal_delivery_result(is_legal_delivery, image)
 
             except:
@@ -80,6 +75,24 @@ def process_video(video_path):
         result.release()
         cv2.destroyAllWindows()
         return result_video_file_path
+
+
+def get_coordinates_for_elbow_shoulder_wrist(is_left_handed, landmarks):
+    if is_left_handed:
+        shoulder = [landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].x,
+                    landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].y]
+        elbow = [landmarks[mp_pose.PoseLandmark.LEFT_ELBOW.value].x,
+                 landmarks[mp_pose.PoseLandmark.LEFT_ELBOW.value].y]
+        wrist = [landmarks[mp_pose.PoseLandmark.LEFT_WRIST.value].x,
+                 landmarks[mp_pose.PoseLandmark.LEFT_WRIST.value].y]
+    else:
+        shoulder = [landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].x,
+                    landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].y]
+        elbow = [landmarks[mp_pose.PoseLandmark.RIGHT_ELBOW.value].x,
+                 landmarks[mp_pose.PoseLandmark.RIGHT_ELBOW.value].y]
+        wrist = [landmarks[mp_pose.PoseLandmark.RIGHT_WRIST.value].x,
+                 landmarks[mp_pose.PoseLandmark.RIGHT_WRIST.value].y]
+    return elbow, shoulder, wrist
 
 
 def calculate_angle(a, b, c):
@@ -106,6 +119,6 @@ def put_legal_delivery_result(label, img):
     x = 10
     y = text_height + 10
 
-    text_color = (0, 255, 0) if label == "Legal"  else (0, 0, 255)
+    text_color = (0, 255, 0) if label == "Legal Ball"  else (0, 0, 255)
     # Draw the text on the image
     cv2.putText(img, label, (x, y), font, font_scale, text_color, thickness)

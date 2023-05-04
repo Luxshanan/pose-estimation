@@ -9,9 +9,9 @@ app = Flask(__name__)
 app.secret_key = "secretkey"
 
 # Init firebase with your credentials
-cred = credentials.Certificate("cric-d9771-firebase-adminsdk-pkadu-09ebdeeba3.json")
+cred = credentials.Certificate("creds.json")
 initialize_app(cred,
-               {'storageBucket': 'cric-d9771.appspot.com'}
+               {'storageBucket': 'cricplayertracker.appspot.com'}
                )
 bucket = storage.bucket() # storage bucket
 store = firestore.client()
@@ -41,6 +41,7 @@ def uploadfiles():
         if not request.files['file']:
             return jsonify("No file selected")
 
+
         video_file = request.files['file']
         fileid = uuid.uuid4().hex
         uploaded_video_path = os.path.join(app.config['UPLOAD_FOLDER'], fileid + video_file.filename)
@@ -51,7 +52,8 @@ def uploadfiles():
         uploaded_video_blob.upload_from_filename(uploaded_video_path)
         uploaded_video_blob.make_public()
 
-        result_video_file_path = process_video(uploaded_video_path)
+        is_left_handed = is_left_handed_bowler(user_id)
+        result_video_file_path = process_video(uploaded_video_path, is_left_handed)
         if result_video_file_path:
             # upload to firebase storage
             result_blob = bucket.blob(result_video_file_path)
@@ -63,6 +65,20 @@ def uploadfiles():
             doc_ref.add({'userId': user_id, 'resultVideo': response, 'processedDateTime': datetime.now()})
 
     return jsonify(response)
+
+def is_left_handed_bowler(user_id):
+    is_left_handed = False
+    doc_ref = store.collection(u'users').document(user_id)
+    doc = doc_ref.get()
+    if doc.exists:
+        bowling_style = doc.to_dict()["profile"]["bowlingStyle"]
+        if "Left Arm" in bowling_style:
+            is_left_handed = True
+    return is_left_handed
+
+
+
+
 
 
 if __name__ == '__main__':
